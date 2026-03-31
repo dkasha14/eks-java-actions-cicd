@@ -1,48 +1,47 @@
-name: Java CI/CD to ECR
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+name: java-app-green
+labels:
+app: java-app
+version: green
 
-on:
-  push:
-    branches:
-      - master
+spec:
+replicas: 2
 
-env:
-  AWS_REGION: ${{ vars.AWS_REGION }}
-  ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY }}
-jobs:
-  build-and-push:
-    runs-on: ubuntu-latest
+selector:
+matchLabels:
+app: java-app
+version: green
 
-    permissions:
-      id-token: write
-      contents: read
+template:
+metadata:
+labels:
+app: java-app
+version: green
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-     
-      - name: Configure AWS credentials (OIDC)
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
-          aws-region: ${{ vars.AWS_REGION }}
-      - name: Login to ECR
-        uses: aws-actions/amazon-ecr-login@v2
+```
+spec:
+  containers:
+    - name: java-app
 
-      - name: Set image tag (commit SHA)
-        run: echo "IMAGE_TAG=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+      # This will be dynamically replaced by CI/CD (DO NOT HARDCHANGE)
+      image: IMAGE_PLACEHOLDER
 
-      - name: Build Docker image
-        run: |
-          docker build -t $ECR_REPOSITORY:$IMAGE_TAG -f docker/Dockerfile .
+      ports:
+        - containerPort: 8080
 
-      - name: Tag Docker image for ECR
-        run: |
-          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
-          docker tag $ECR_REPOSITORY:$IMAGE_TAG \
-          $ACCOUNT_ID.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/$ECR_REPOSITORY:$IMAGE_TAG
+      resources:
+        requests:
+          cpu: "200m"
+          memory: "256Mi"
+        limits:
+          cpu: "500m"
+          memory: "512Mi"
 
-      - name: Push Docker image to ECR
-        run: |
-          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
-          docker push \
-          $ACCOUNT_ID.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/$ECR_REPOSITORY:$IMAGE_TAG
+      lifecycle:
+        preStop:
+          exec:
+            command: ["sh", "-c", "sleep 10"]
+```
+
