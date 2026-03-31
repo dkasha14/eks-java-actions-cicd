@@ -1,0 +1,28 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: java-app-canary
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: java-app-canary
+  template:
+    metadata:
+      labels:
+        app: java-app-canary
+    spec:
+      containers:
+      - name: java-app
+        image: 816069164153.dkr.ecr.us-east-1.amazonaws.com/dev-java-app:d7fb5dd
+        ports:
+        - containerPort: 8080
+
+  strategy:
+    canary:
+      steps:
+      - setWeight: 20
+      - pause: { duration: 30s }
+      - setWeight: 50
+      - pause: { duration: 30s }
+      - setWeight: 100
