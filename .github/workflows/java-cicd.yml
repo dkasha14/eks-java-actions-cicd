@@ -6,9 +6,8 @@ on:
       - master
 
 env:
-  AWS_REGION: us-east-1
-  ECR_REPOSITORY: dev-eks-app
-
+  AWS_REGION: ${{ vars.AWS_REGION }}
+  ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY }}
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
@@ -20,13 +19,11 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::816069164153:role/github-actions-eks-role
-          aws-region: ${{ env.AWS_REGION }}
-
+        role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+        aws-region: ${{ vars.AWS_REGION }}
       - name: Login to ECR
         uses: aws-actions/amazon-ecr-login@v2
 
