@@ -42,11 +42,11 @@ This architecture shows how code moves from development to production in a fully
 
 🔄 Pipeline Execution Flow
 
-1. Code Trigger
+Code Trigger
 
 Any push to the master branch automatically triggers the GitHub Actions workflow. This ensures continuous integration and eliminates manual deployment steps.
 
-2. Authentication (OIDC-Based Access)
+Authentication (OIDC-Based Access)
 
 Instead of storing AWS credentials, the pipeline uses OIDC:
 
@@ -59,7 +59,7 @@ This provides:
 No hardcoded secrets
 Temporary credentials
 Secure access model
-3. Build Phase (Docker Image Creation)
+Build Phase (Docker Image Creation)
 
 The pipeline builds the Docker image:
 
@@ -68,10 +68,7 @@ Dependencies are resolved
 Docker image is created
 Image is tagged using commit SHA
 docker build -t dev-java-app:<commit-id> .
-
-This ensures each build is uniquely identifiable and traceable.
-
-4. Push Phase (ECR Integration)
+Push Phase (ECR Integration)
 
 The Docker image is pushed to Amazon ECR:
 
@@ -82,15 +79,12 @@ ECR acts as:
 Private container registry
 Central image storage
 Source for Kubernetes deployments
-
-Each image version represents a specific commit, enabling rollback and version control.
-
-5. Cluster Access (EKS Connection)
+Cluster Access (EKS Connection)
 aws eks update-kubeconfig --region us-east-1 --name EKS-DEV
 
 This allows GitHub Actions to execute kubectl commands directly on the cluster.
 
-6. Deployment Phase (Kubernetes Apply)
+Deployment Phase (Kubernetes Apply)
 kubectl apply -f k8s/
 
 This creates:
@@ -98,71 +92,42 @@ This creates:
 Deployment → manages pods
 Service → exposes application
 Rollout → manages canary strategy
+Runtime Execution (EKS)
 
-Kubernetes ensures desired state is maintained automatically.
+Initially, deployment failed with ImagePullBackOff.
 
-7. Runtime Execution (EKS)
-
-Initially, deployment failed with ImagePullBackOff. This was due to incorrect image reference or permission issues between EKS and ECR. After fixing IAM roles and image tags, Kubernetes successfully pulled the image.
-
-Pods were created and entered Running state, confirming successful deployment.
+Pods were created and entered Running state.
 
 Key idea:
 
 Docker builds the image
 Kubernetes runs the container
-8. External Exposure (NodePort → ALB)
+External Exposure (NodePort → ALB)
 
-Initially exposed using NodePort for validation.
+Initially exposed using NodePort.
 
-Later exposed using AWS Load Balancer:
+Later exposed using AWS Load Balancer.
 
-ALB automatically created
-Traffic routed to pods
-Application accessible publicly
 🔁 Data Flow (End-to-End System Movement)
 GitHub → CI Pipeline → Docker Image → ECR → EKS → Pods → Service → ALB → User
-
-The data flow represents how application code transforms into a running service. Source code is converted into a Docker image, stored in ECR, and then pulled by Kubernetes nodes. The service routes traffic internally, while ALB exposes it externally. Meanwhile, monitoring systems continuously collect metrics, ensuring visibility into system performance.
-
 🔵🟢 Blue-Green Deployment
 
-Blue-Green deployment maintains two environments:
-
-Blue → current stable version
+Blue → stable version
 Green → new version
 
-Traffic is switched from Blue to Green once validation is complete. This ensures zero downtime and provides instant rollback capability.
+Traffic switches safely between versions.
 
 🟡 Canary Deployment
 
-Canary deployment releases the new version gradually:
-
-Small percentage of traffic is routed to new version
-Metrics are monitored
-Traffic is increased progressively
-
-This reduces risk and ensures safe deployment in production.
+Traffic is gradually shifted to the new version while monitoring system behavior.
 
 🚀 Argo Rollouts (Progressive Delivery)
 
-Argo Rollouts enhances Kubernetes deployments:
-
-Traffic shifts in stages (20% → 50% → 100%)
-Pause between stages for monitoring
-Automated progressive delivery
-
-This provides fine-grained control over deployment strategy.
+Traffic shifts in controlled stages (20% → 50% → 100%).
 
 📊 Monitoring (Prometheus + Grafana)
 
-Monitoring provides visibility into:
-
-CPU usage
-Memory usage
-Namespace activity
-
-Prometheus collects metrics, and Grafana visualizes them. This ensures system stability and helps detect performance issues early.
+Metrics collected and visualized for system health.
 
 🧠 Concepts Demonstrated
 CI/CD automation using GitHub Actions
@@ -171,11 +136,9 @@ Docker image lifecycle management
 Kubernetes deployments and services
 Blue-Green and Canary deployment strategies
 Monitoring with Prometheus & Grafana
-Real-world debugging (ImagePullBackOff, pipeline failures)
 👩‍💻 Author
 
-Asha
-— DevOps & AI-DevOps Engineer
+Asha 
 
 ⭐ Summary
 
