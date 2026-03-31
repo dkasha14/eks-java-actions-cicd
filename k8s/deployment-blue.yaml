@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: java-app-blue
+  labels:
+    app: java-app
+    version: blue
+
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: java-app
+      version: blue
+
+  template:
+    metadata:
+      labels:
+        app: java-app
+        version: blue
+
+    spec:
+      containers:
+      - name: java-app
+        image: 816069164153.dkr.ecr.us-east-1.amazonaws.com/dev-java-app:9b5dc1a
+
+        ports:
+        - containerPort: 8080
+
+        resources:
+          requests:
+            cpu: "200m"
+            memory: "256Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 8080
+          initialDelaySeconds: 20
+          periodSeconds: 10
+
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 15
