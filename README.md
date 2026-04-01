@@ -57,6 +57,7 @@ End User (Browser Access)
 
 ## 🧩 CI/CD + Terraform Data Flow Diagram
 
+```text
 Terraform → VPC → EKS Cluster → Node Groups → IAM Roles
 ↓
 GitHub → CI/CD Pipeline → OIDC → IAM Role
@@ -78,10 +79,12 @@ User Access
 ### 🔄 Pipeline Execution Flow
 
 #### 1. Code Trigger
+
 Any push to the master branch triggers the GitHub Actions workflow automatically.
 Audit trail showing automated workflow triggers upon code pushes.
 
 #### 2. Authentication (OIDC-Based Access)
+
 Instead of storing AWS credentials, the pipeline uses OIDC:
 * GitHub generates a temporary token.
 * AWS validates the token using the OIDC provider.
@@ -90,6 +93,7 @@ Instead of storing AWS credentials, the pipeline uses OIDC:
 **This approach provides:** Zero hardcoded secrets, temporary access tokens, and a highly secure authentication model.
 
 #### 3. Build Phase (Docker Image Creation)
+
 The GitHub Actions runner builds the Docker image:
 * Application source is packaged.
 * Dependencies are installed.
@@ -315,7 +319,7 @@ Monitoring plays a crucial role during deployments:
 ---
 👩‍💻 Author
 
-Asha 
+ Asha 
 ---
 ## ⭐ Summary
 
