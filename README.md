@@ -1,21 +1,16 @@
-# 🚀 EKS CI/CD Pipeline with GitHub Actions, ECR, EKS, Blue-Green & Canary
+# 🚀 EKS CI/CD Pipeline with GitHub Actions, Terraform & AWS
 
 ## 📖 Overview
 
-This project demonstrates a complete, end-to-end CI/CD pipeline that automates the building, storing, and deploying of a containerized Java application into Amazon EKS.
+This project demonstrates a complete CI/CD pipeline that automates the process of building, storing, and deploying a containerized application to Amazon EKS.
 
 The setup follows modern DevOps principles:
-* **Infrastructure as Code:** Terraform (pre-provisioned platform).
-* **Secure Authentication:** OIDC integration (no static AWS credentials).
-* **Containerization:** Docker.
-* **Orchestration:** Kubernetes orchestration using Amazon EKS.
-* **Traffic Management:** Exposed externally via AWS Application Load Balancer (ALB) and Kubernetes Ingress.
-* **Advanced Deployments:** Blue-Green & Canary strategies.
-* **Observability:** Prometheus & Grafana.
+* **Infrastructure as Code:** Terraform
+* **Secure Authentication:** OIDC using GitHub Actions (no AWS keys)
+* **Container-based Deployment:** Docker
+* **Kubernetes Orchestration:** Amazon EKS
 
-The pipeline ensures that every code change is automatically built, pushed, and deployed without manual intervention while maintaining reliability and observability.
-
-> 👉 **The key idea is simple:** Every code change automatically flows from `GitHub → Build → ECR → EKS → User` without manual steps.
+The pipeline ensures that every code change is automatically built and deployed without manual intervention.
 
 ---
 
@@ -34,140 +29,172 @@ Docker Build (Container Image Creation)
  ↓
 Amazon ECR (Private Image Registry)
  ↓
-Amazon EKS Cluster
+Amazon EKS Control Plane
  ↓
-Kubernetes Pods (Running Containers)
+Worker Nodes (Kubernetes Pods)
  ↓
-Kubernetes Service (NodePort / LoadBalancer)
+Kubernetes Service (LoadBalancer)
  ↓
-AWS Application Load Balancer (via Ingress)
+AWS Elastic Load Balancer (Public Endpoint)
  ↓
 End User (Browser Access)
-This architecture represents a secure and automated delivery pipeline. Instead of embedding AWS credentials, GitHub uses OIDC to assume an IAM role dynamically. The application is containerized and stored in ECR, while EKS handles orchestration, scaling, and self-healing. The Application Load Balancer (ALB) and Ingress expose the application externally, making the system production-ready.
-
-Architecture Overview: This diagram visualizes the complete high-level architecture and data flow of the project. It illustrates how code pushed to GitHub triggers an OIDC-authenticated GitHub Action, which builds and pushes a Docker image to ECR. Finally, the image is deployed to an EKS cluster where traffic is managed via an Application Load Balancer, with Prometheus and Grafana handling observability.
-
-🔁 Data Flow (End-to-End System Movement)
-GitHub → CI Pipeline → Docker Image → ECR → EKS → Pods → Service → ALB (Ingress) → User
-
-This flow represents how code transforms into a running application. Each stage passes an artifact or signal to the next stage, forming a fully automated delivery chain.
+Architecture Overview: Visualizes the high-level architecture and data flow, showing how code pushed to GitHub triggers an OIDC-authenticated GitHub Action to build, push, and deploy to EKS.
 
 🔄 Pipeline Execution Flow
-Code Trigger
-Any push to the master branch triggers the GitHub Actions workflow automatically. This ensures continuous integration and continuous deployment without manual intervention.
+1. Code Trigger
+Any push to the master branch triggers the GitHub Actions workflow automatically.
 
-Continuous Integration: This screenshot shows the history of GitHub Actions runs, including both failures and successful executions. It acts as an audit trail and proves that the pipeline is fully automated and continuously improving through debugging and fixes.
+Audit trail showing automated workflow triggers upon code pushes.
 
-Authentication (OIDC-Based Access)
-The pipeline uses OIDC (OpenID Connect) instead of static credentials:
+2. Authentication (OIDC-Based Access)
+Instead of storing AWS credentials, the pipeline uses OIDC:
 
-GitHub generates a short-lived identity token.
+GitHub generates a temporary token.
 
-AWS validates it via the IAM OIDC provider.
+AWS validates the token using the OIDC provider.
 
-The IAM role github-actions-eks-role is assumed.
+IAM role github-actions-eks-role is assumed.
 
-Benefits: No hardcoded secrets stored in GitHub. Temporary credentials. Strong security posture.
+This approach provides: Zero hardcoded secrets, temporary access tokens, and a highly secure authentication model.
 
-Build Phase (Docker Image Creation)
-The pipeline builds the Docker image:
+3. Build Phase (Docker Image Creation)
+The GitHub Actions runner builds the Docker image:
 
-Java application is compiled/packaged using Maven.
+Application source is packaged.
 
-Dependencies are resolved.
+Dependencies are installed.
 
-Docker image is created.
-
-Image is tagged using commit SHA to ensure immutability and traceability.
+Image is created and tagged.
 
 Bash
-docker build -t dev-java-app:<commit-id> .
-Automated Build Steps: This screenshot shows each stage of the GitHub Actions pipeline including AWS authentication, Docker build, and image push. Every step is automated, ensuring consistent builds across environments.
+docker build -t dev-eks-app .
+Detailed view of the automated build steps executed by the pipeline.
 
-Push Phase (ECR Integration)
-The Docker image is pushed to Amazon ECR. ECR acts as the private container registry, central artifact storage, and source for Kubernetes deployments.
+4. Push Phase (ECR Integration)
+The Docker image is pushed to Amazon ECR:
 
 Bash
-docker push [816069164153.dkr.ecr.us-east-1.amazonaws.com/dev-java-app](https://816069164153.dkr.ecr.us-east-1.amazonaws.com/dev-java-app):<tag>
-Private Image Registry: This screenshot shows the ECR repository storing Docker images securely.
+docker push [816069164153.dkr.ecr.us-east-1.amazonaws.com/dev-eks-app:latest](https://816069164153.dkr.ecr.us-east-1.amazonaws.com/dev-eks-app:latest)
+ECR acts as a private container registry, central storage for images, and the primary source for Kubernetes deployments.
 
-Image Versioning: Each image is tagged with commit SHA, enabling rollback and traceability.
+Amazon ECR acting as the secure, private container registry.
 
-Cluster Access & Deployment (EKS)
-Configure kubectl so the pipeline can interact directly with the EKS cluster, then apply the manifests:
+Versioned Docker images stored immutably using commit SHAs.
+
+5. Cluster Access (EKS Connection)
+The pipeline connects to the Kubernetes cluster:
 
 Bash
 aws eks update-kubeconfig --region us-east-1 --name EKS-DEV
+This allows GitHub Actions to securely run kubectl commands.
+
+6. Deployment Phase (Kubernetes Apply)
+Kubernetes manifests are applied:
+
+Bash
 kubectl apply -f k8s/
-This creates the Deployment (manages pod lifecycle), Service (exposes application), and Rollout (handles canary strategy). Kubernetes ensures self-healing, scaling, and desired state.
+This creates the Deployment (manages Pods) and the Service (exposes the application).
 
-Runtime Execution (EKS)
-Initially, the deployment failed with ImagePullBackOff due to incorrect image references or IAM permission issues. After fixing, pods transitioned to Running state.
+7. Runtime Execution (EKS)
+Kubernetes pulls the image from ECR.
 
-Real-World Troubleshooting: This demonstrates practical debugging using kubectl, which is critical in production systems.
+Pods are created inside worker nodes.
 
-External Exposure (NodePort → ALB)
-The application was first exposed using NodePort as an initial validation step. In this approach, Kubernetes opens a specific port on every worker node, allowing external traffic to reach the application using the node’s public IP and port. This is extremely useful during early testing because it helps verify that pods are running correctly without introducing additional complexity.
+Containers start running the application.
 
-Once validated, the exposure strategy was upgraded to use an AWS Application Load Balancer (ALB) through Kubernetes Ingress. This transition is critical for production systems.
+Key idea: Docker builds the image → Kubernetes runs the container.
 
-A public DNS endpoint is automatically provisioned.
+Verifying pod status and handling real-world runtime execution states.
 
-Traffic is distributed across multiple pods using target groups.
+8. External Exposure (LoadBalancer)
+A Kubernetes Service of type LoadBalancer ensures:
 
-Health checks ensure only healthy pods receive traffic.
+AWS provisions an ELB automatically.
 
-Integration with AWS networking provides high availability across AZs.
+Traffic is routed to Pods.
 
-External Access Validation: NodePort ensured that the application and service routing were functioning correctly at a basic level. Moving to ALB introduced a production-grade traffic management layer, enabling scalability, reliability, and secure external access.
+The application becomes publicly accessible.
 
-🚦 Deployment Strategies
-🔵🟢 Blue-Green Deployment
-Two environments are maintained simultaneously:
+Validating external traffic routing and application exposure.
 
-Blue → current stable version serving production traffic.
+🔐 Access Control & Security
+IAM Role (GitHub Actions)
+Created via Terraform.
 
-Green → newly deployed version for validation.
+Assumed using OIDC.
 
-Instead of updating the existing deployment, a completely separate environment (Green) is created. This allows testing the new version in isolation without impacting live users. Once validation is complete, traffic is switched from Blue to Green using Kubernetes service selectors or Ingress routing.
+Grants access to ECR (push images) and EKS (cluster operations).
 
-Key advantages: Zero downtime deployments, instant rollback, and safe validation.
+Kubernetes RBAC Mapping
+The IAM role is mapped in aws-auth:
 
-Successful Orchestration: This validates that the orchestration logic is correctly managing the application's dual-environment lifecycle and that pods are running successfully.
+YAML
+mapRoles:
+  - rolearn: arn:aws:iam::816069164153:role/github-actions-eks-role
+    username: github-actions
+    groups:
+      - system:masters
+This enables deployment access directly inside the cluster.
 
-🟡 Canary Deployment
-Canary deployment introduces the new version gradually instead of switching all traffic at once. A small percentage of users is routed to the new version, system behavior is continuously monitored, and if stable, traffic is increased step-by-step.
+🧩 Infrastructure Setup (Terraform)
+The infrastructure is modular and reusable, supporting environment-based deployments (dev, sit, prod):
 
-Benefits: Reduced blast radius of failures, real-time validation with actual user traffic, and data-driven decision-making using metrics.
+VPC: Networking layer.
 
-🚀 Argo Rollouts (Progressive Delivery)
-Argo Rollouts extends Kubernetes deployment capabilities by enabling progressive delivery with fine-grained traffic control. Traffic is shifted in controlled stages (e.g., 20% → 50% → 100%). Between each stage, the rollout can pause automatically, allowing time to monitor system metrics and validate stability.
+EKS Cluster: Control plane.
 
-📊 Monitoring (Prometheus + Grafana)
-Monitoring ensures that the system is not only running but also performing optimally under load. Prometheus collects time-series metrics, and Grafana visualizes these metrics in dashboards.
+Node Groups: Compute layer.
 
-Key metrics observed include CPU utilization, memory consumption, pod health, and namespace-level resource usage.
+ECR Repository: Image storage.
 
-Cluster Observability: Grafana dashboards provide real-time visibility into the cluster’s health and performance. This allows proactive detection of issues, better capacity planning, and confident deployment decisions.
+IAM Roles: Security.
 
-Workload Comparison: Grafana dashboards show resource usage and traffic patterns for both Blue and Green deployments. This helps confirm that the new version behaves correctly under real conditions before full cutover.
+📸 Project Screenshots
+Repository Structure:
+
+CI/CD Pipeline Success:
+
+Pipeline Execution Steps:
+
+ECR Repository:
+
+ECR Image:
+
+Pods and Service (External IP):
+
+Application Output:
+
+Cluster Resource Monitoring (Grafana):
+
+Deployment Traffic Monitoring (Grafana):
+
+🌐 Application Access
+http://<REPLACE_WITH_YOUR_ELB_ENDPOINT>
 
 🧠 Concepts Demonstrated
-CI/CD automation using GitHub Actions.
+CI/CD automation using GitHub Actions
 
-Secure AWS authentication using OIDC.
+Secure AWS authentication with OIDC
 
-Docker image lifecycle management.
+Docker image lifecycle management
 
-Kubernetes deployments, services, ingress.
+Kubernetes Deployment and Service usage
 
-Blue-Green and Canary strategies.
+Infrastructure provisioning with Terraform
 
-Argo Rollouts.
+🚀 Possible Enhancements
+Helm-based deployments
 
-Monitoring with Prometheus & Grafana.
+Multi-environment pipelines
 
-Real-world debugging.
+HTTPS using Ingress + ACM
+
+Monitoring (Prometheus & Grafana)
+
+Versioned image tagging strategy
+
+👩‍💻 Author
+Asha
 
 ⭐ Summary
-This project showcases a real-world, production-grade DevOps pipeline where CI/CD, security, containerization, Kubernetes, deployment strategies, and monitoring work together to deliver a fully automated and reliable application deployment system.
+This project showcases a real-world DevOps pipeline where infrastructure, security, CI/CD, and Kubernetes work together to deliver a fully automated deployment system.
