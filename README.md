@@ -64,10 +64,9 @@ Service → Ingress → ALB
 ↓
 User Access
 ---
+## CI/CD Pipeline Overview
 
-## 🔄 CI/CD Pipeline Execution
-
-![Pipeline](docs/images/02-cicd-pipeline-history.png)
+![CI/CD Pipeline History](docs/images/02-cicd-pipeline-history.png)
 
 🔄 Pipeline Execution Flow
 
@@ -115,9 +114,10 @@ Amazon ECR acting as the secure, private container registry.
 Versioned Docker images stored immutably using commit SHAs.
 ---
 
-## ⚙️ Workflow Stages
+## ⚙️ CI/CD Workflow Stages
 
-![Workflow](docs/images/03-cicd-workflow-stages.png)
+![03-cicd-workflow-stages](docs/images/03-cicd-workflow-stages.png)
+
 The pipeline builds the Docker image:
 
 Java application is compiled/packaged using Maven.
@@ -135,8 +135,8 @@ Pipeline stages ->authentication-> build->push->deployment.
 
 ## 📦 ECR (Container Registry)
 
-![ECR Repo](docs/images/04-ecr-repository.png)
-![ECR Images](docs/images/05-ecr-images.png)
+![04-ecr-repository](docs/images/04-ecr-repository.png)
+![05-ecr-images](docs/images/05-ecr-images.png)
 
 The Docker image is pushed to Amazon ECR:
 
@@ -171,7 +171,7 @@ Kubernetes ensures self-healing, scaling, and desired state.
 
 ## ❌ Deployment Issue (Image Pull Error)
 
-![Error](docs/images/06-k8s-imagepull-error.png)
+![06-k8s-imagepull-error](docs/images/06-k8s-imagepull-error.png)
 
 Initially, the deployment failed with ImagePullBackOff due to incorrect image references or IAM permission issues. After fixing, pods transitioned to Running state.
 
@@ -180,7 +180,7 @@ Real-World Troubleshooting: This demonstrates practical debugging using kubectl,
 
 ## ✅ Deployment Success
 
-![Success](docs/images/07-k8s-green-deployment-success.png)
+![07-k8s-green-deployment-success](docs/images/07-k8s-green-deployment-success.png)
 
 Application successfully deployed and running in Kubernetes.
 
@@ -188,14 +188,15 @@ Application successfully deployed and running in Kubernetes.
 
 ## 🌐 External Exposure (NodePort → ALB)
 
-![NodePort](docs/images/08-nodeport-app-access.png)
-![ALB](docs/images/13-alb-final-app-access.png)
+![08-nodeport-app-access](docs/images/08-nodeport-app-access.png)
 
 The application was first exposed using NodePort as an initial validation step. In this approach, Kubernetes opens a specific port on every worker node, allowing external traffic to reach the application using the node’s public IP and port. This is extremely useful during early testing because it helps verify that pods are running correctly, services are routing traffic properly, and the application is responding as expected without introducing additional complexity.
 
 Once the application behavior was validated, the exposure strategy was upgraded to use an AWS Application Load Balancer (ALB) through Kubernetes Ingress. This transition is critical for production systems because NodePort is not scalable or secure for public access.
 
 With ALB:
+
+![13-alb-final-app-access](docs/images/13-alb-final-app-access.png)
 
 A public DNS endpoint is automatically provisioned
 Traffic is distributed across multiple pods using target groups
@@ -210,7 +211,7 @@ External Access Validation: NodePort ensured that the application and service ro
 
 ### 🔵🟢 Blue-Green Deployment
 
-![BlueGreen](docs/images/10-grafana-blue-green-traffic.png)
+![10-grafana-blue-green-traffic](docs/images/10-grafana-blue-green-traffic.png)
 
 Two environments:
 - Blue → stable
@@ -234,7 +235,7 @@ Workload Comparison: Grafana dashboards show resource usage and traffic patterns
 
 ### 🟡 Canary Deployment
 
-![Canary](docs/images/11-grafana-blue-green-canary.png)
+![11-grafana-blue-green-canary](docs/images/11-grafana-blue-green-canary.png)
 
 Canary deployment introduces the new version gradually instead of switching all traffic at once.
 
@@ -258,7 +259,7 @@ This approach ensures that new releases are introduced safely without risking th
 
 ### 🚀 Argo Rollouts
 
-![Rollout](docs/images/12-argo-rollout-canary.png)
+![12-argo-rollout-canary](docs/images/12-argo-rollout-canary.png)
 
 Argo Rollouts extends Kubernetes deployment capabilities by enabling progressive delivery with fine-grained traffic control.
 
@@ -281,7 +282,7 @@ This makes deployments predictable, observable, and reversible, which is critica
 
 ## 📊 Monitoring (Prometheus + Grafana)
 
-![Monitoring](docs/images/09-grafana-cluster-monitoring.png)
+![09-grafana-cluster-monitoring](docs/images/09-grafana-cluster-monitoring.png)
 
 Monitoring ensures that the system is not only running but also performing optimally under load.
 
