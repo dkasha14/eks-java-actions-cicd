@@ -1,11 +1,11 @@
-# ⚙️ EKS CI/CD Pipeline with GitHub Actions, Terraform, ECR & EKS ☸️
+# ⚙️EKS CI/CD Pipeline with GitHub Actions,Terraform,ECR & EKS☸️
 
 ---
 
 ## 📖 Overview
-
+ 
 This project demonstrates a complete, end-to-end CI/CD pipeline that automates the building, storing, and deploying of a containerized Java application into Amazon EKS.
-
+ 
 The setup follows modern DevOps principles:
 * **Infrastructure as Code:** Terraform (pre-provisioned platform).
 * **Secure Authentication:** OIDC integration (no static AWS credentials).
@@ -22,6 +22,8 @@ The pipeline ensures that every code change is automatically built, pushed, and 
 ---
 
 ![Architecture](docs/images/01-cicd-terraform-eks-architecture.png)
+
+
 
 ## 🏗️ Architecture Flow
 
@@ -214,11 +216,9 @@ With ALB:
 
 ![10-grafana-blue-green-traffic](docs/images/10-grafana-blue-green-traffic.png)
 
-Two environments:
-- Blue → stable
-- Green → new
 
 Two environments are maintained simultaneously:
+
 * **Blue** → current stable version serving production traffic
 * **Green** → newly deployed version for validation
 
@@ -313,7 +313,10 @@ Monitoring plays a crucial role during deployments:
 - Monitoring with Prometheus & Grafana
 
 ---
+👩‍💻 Author
 
+Asha 
+---
 ## ⭐ Summary
 
 This project showcases a production-grade DevOps pipeline where CI/CD, security, containerization, Kubernetes, deployment strategies, and monitoring work together to deliver a fully automated and reliable system.
