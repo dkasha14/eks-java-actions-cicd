@@ -51,9 +51,15 @@ AWS Elastic Load Balancer (Public Endpoint)
 End User (Browser Access)
 ```
 
-**Architecture Overview:** Visualizes the high-level architecture and data flow, showing how code pushed to GitHub triggers an OIDC-authenticated GitHub Action to build, push, and deploy to EKS.
+**Architecture Overview:** This architecture represents a secure and automated delivery pipeline. Instead of embedding AWS credentials, GitHub uses OIDC to assume an IAM role dynamically. The application is containerized and stored in ECR, while EKS handles orchestration, scaling, and self-healing. The Application Load Balancer (ALB) and Ingress expose the application externally, making the system production-ready.
 
-`GitHub → GitHub Actions → OIDC → IAM Role → Docker Build → ECR → EKS → Pods → Service → ALB → User`
+Architecture Overview: This diagram visualizes the complete high-level architecture and data flow of the project. It illustrates how code pushed to GitHub triggers an OIDC-authenticated GitHub Action, which builds and pushes a Docker image to ECR. Finally, the image is deployed to an EKS cluster where traffic is managed via an Application Load Balancer, with Prometheus and Grafana handling observability.
+
+🔁 Data Flow (End-to-End System Movement)
+GitHub → CI Pipeline → Docker Image → ECR → EKS → Pods → Service → ALB (Ingress) → User
+
+This flow represents how code transforms into a running application. Each stage passes an artifact or signal to the next stage, forming a fully automated delivery chain.
+
 ## 🧩 CI/CD + Terraform Data Flow Diagram
 
 ```text
@@ -68,6 +74,8 @@ EKS → Pull Image → Pods Created
 Service → Ingress → ALB
 ↓
 User Access
+```
+---
 
 ## CI/CD Pipeline Overview
 
@@ -316,7 +324,6 @@ Monitoring plays a crucial role during deployments:
 👩‍💻 Author
 
 Asha 
-
 ---
 
 ## ⭐ Summary
