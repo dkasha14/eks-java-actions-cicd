@@ -1,5 +1,3 @@
-
-
 ---
 
 # ⚙️ EKS CI/CD Pipeline with GitHub Actions, Terraform, ECR & EKS ☸️
@@ -56,9 +54,9 @@ End User (Browser Access)
 **Architecture Overview:** Visualizes the high-level architecture and data flow, showing how code pushed to GitHub triggers an OIDC-authenticated GitHub Action to build, push, and deploy to EKS.
 
 `GitHub → GitHub Actions → OIDC → IAM Role → Docker Build → ECR → EKS → Pods → Service → ALB → User`
-
 ## 🧩 CI/CD + Terraform Data Flow Diagram
 
+```text
 Terraform → VPC → EKS Cluster → Node Groups → IAM Roles
 ↓
 GitHub → CI/CD Pipeline → OIDC → IAM Role
@@ -70,7 +68,6 @@ EKS → Pull Image → Pods Created
 Service → Ingress → ALB
 ↓
 User Access
-
 ---
 
 ## CI/CD Pipeline Overview
@@ -218,6 +215,7 @@ With ALB:
 
 ![10-grafana-blue-green-traffic](docs/images/10-grafana-blue-green-traffic.png)
 
+
 Two environments are maintained simultaneously:
 * **Blue** → current stable version serving production traffic
 * **Green** → newly deployed version for validation
@@ -316,7 +314,9 @@ Monitoring plays a crucial role during deployments:
 👩‍💻 Author
 
 Asha 
+
 ---
+
 ## ⭐ Summary
 
 This project showcases a production-grade DevOps pipeline where CI/CD, security, containerization, Kubernetes, deployment strategies, and monitoring work together to deliver a fully automated and reliable system.
