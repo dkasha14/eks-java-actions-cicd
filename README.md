@@ -205,17 +205,28 @@ The application was first exposed using NodePort as an initial validation step. 
 
 Once the application behavior was validated, the exposure strategy was upgraded to use an AWS Application Load Balancer (ALB) through Kubernetes Ingress. This transition is critical for production systems because NodePort is not scalable or secure for public access.
 
-With ALB:
+## 🌐 Ingress (ALB Integration)
+
 
 ![13-alb-final-app-access](docs/images/13-alb-final-app-access.png)
 
-* A public DNS endpoint is automatically provisioned
-* Traffic is distributed across multiple pods using target groups
-* Health checks ensure only healthy pods receive traffic
-* Integration with AWS networking provides high availability across AZs
-* Ingress rules enable path-based and host-based routing
+Kubernetes Ingress is used to expose the application externally using an AWS Application Load Balancer (ALB). Instead of directly exposing services, Ingress acts as a smart routing layer that manages how external traffic enters the cluster.
 
-**External Access Validation:** NodePort ensured that the application and service routing were functioning correctly at a basic level. Moving to ALB introduced a production-grade traffic management layer, enabling scalability, reliability, and secure external access.
+In this setup, the AWS Load Balancer Controller watches the Ingress resource and automatically provisions an ALB in AWS. It then configures listeners, target groups, and routing rules based on the Kubernetes Ingress definition.
+
+Key capabilities of Ingress with ALB:
+
+- Automatically provisions a public ALB with DNS
+- Routes traffic to Kubernetes services
+- Performs health checks on pods
+- Supports path-based and host-based routing
+- Ensures high availability across multiple availability zones
+
+Traffic Flow:
+
+User → ALB → Target Group → Kubernetes Service → Pods
+
+Ingress removes the need for manual load balancer configuration and provides a fully managed, scalable, and production-ready entry point into the Kubernetes cluster.
 
 ---
 
